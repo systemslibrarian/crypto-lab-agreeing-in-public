@@ -74,9 +74,23 @@ jobs:
       # broken. The count is asserted so a run that collects zero test files
       # cannot exit 0 and read as a pass.
       - name: Unit and correctness tests
+        env:
+          # Without this vitest colours the summary, and the escape sequences
+          # land BETWEEN "Tests" and the number -- so a plain grep for the
+          # count matches nothing and the guard fails a run whose tests all
+          # passed. That happened here on the first deploy. The sed below
+          # strips ANSI anyway, because a guard that cannot read its own
+          # evidence is worse than no guard.
+          NO_COLOR: '1'
         run: |
+          set -o pipefail   # or `tee` returns 0 and a failing suite reads green
           npm run test -- --reporter=verbose 2>&1 | tee vitest.log
-          grep -Eq 'Tests +[1-9][0-9]* passed' vitest.log \
+          passed=$(sed -E 's/\x1b\[[0-9;]*m//g' vitest.log \
+            | sed -nE 's/.*Tests[[:space:]]+([0-9]+) passed.*/\1/p' | tail -1)
+          echo "vitest reported ${passed:-0} passing tests"
+          # A test step that runs ZERO tests exits 0 (§4.1e), so assert the
+          # count rather than the exit status alone.
+          [ -n "$passed" ] && [ "$passed" -gt 0 ] \
             || { echo "::error::vitest reported no passing tests"; exit 1; }
       - name: Production build
         run: npm run build
