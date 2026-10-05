@@ -1,0 +1,156 @@
+{
+  "generatedBy": "scripts/mutate.mjs run",
+  "note": "Machine-written from the run it reports. Do not hand-edit; re-run instead.",
+  "commit": "1b86e74c13fba24bac38e0d13b4b06e11df25b89",
+  "ranAt": "2026-10-05T04:18:13.235Z",
+  "suite": "npx playwright test e2e/verdicts.spec.ts e2e/claims.spec.ts e2e/verdict-coverage.spec.ts --reporter=list --retries=0",
+  "baselineTestsPassed": "22",
+  "observed": [
+    {
+      "id": "comparison-always-identical",
+      "verdict": "KILLED",
+      "file": "src/verify/compare.ts",
+      "markers": [
+        "guess-outcome",
+        "recovery-status"
+      ],
+      "baselineHash": "82ee31789aa4",
+      "mutatedHash": "a138978c6f34",
+      "restoredHash": "82ee31789aa4",
+      "failingTests": [
+        "e2e/claims.spec.ts:110:1 › the guessing space the prose names matches the length the input accepts",
+        "e2e/verdict-coverage.spec.ts:50:1 › check 1: every verdict and every measurement the page renders has a recorded mutation",
+        "e2e/verdict-coverage.spec.ts:155:1 › every recorded mutation still applies to the source it names",
+        "e2e/verdicts.spec.ts:76:1 › guess-outcome renders the byte comparison of a guess against the real secret",
+        "e2e/verdicts.spec.ts:89:1 › recovery-status reports no recovery, and counts the attempt"
+      ]
+    },
+    {
+      "id": "comparison-always-different",
+      "verdict": "KILLED",
+      "file": "src/verify/compare.ts",
+      "markers": [
+        "spec-vectors",
+        "shared-secret-match",
+        "identity-status"
+      ],
+      "baselineHash": "82ee31789aa4",
+      "mutatedHash": "93a8b9436e3f",
+      "restoredHash": "82ee31789aa4",
+      "failingTests": [
+        "e2e/claims.spec.ts:59:1 › the shared secret is what X25519 independently says it should be",
+        "e2e/claims.spec.ts:129:1 › a fresh exchange retires an attempt made against the previous secret",
+        "e2e/claims.spec.ts:201:1 › identity-status: every check passes in the substituted exchange and the limit is on screen",
+        "e2e/claims.spec.ts:243:1 › the substituted exchange really was run against a substituted value",
+        "e2e/verdict-coverage.spec.ts:155:1 › every recorded mutation still applies to the source it names",
+        "e2e/verdicts.spec.ts:48:1 › spec-vectors reports the measured check against the RFC 7748 vectors",
+        "e2e/verdicts.spec.ts:57:1 › shared-secret-match renders the measured comparison of the two sides",
+        "e2e/verdicts.spec.ts:102:1 › guess-outcome and recovery-status both turn over for the one value that works",
+        "e2e/verdicts.spec.ts:118:1 › identity-status renders the substituted exchange as a match"
+      ]
+    },
+    {
+      "id": "eavesdropper-claims-recovery",
+      "verdict": "KILLED",
+      "file": "src/eavesdrop/attempt.ts",
+      "markers": [
+        "recovery-status"
+      ],
+      "baselineHash": "82ee31789aa4",
+      "mutatedHash": "13d87e464944",
+      "restoredHash": "82ee31789aa4",
+      "failingTests": [
+        "e2e/claims.spec.ts:110:1 › the guessing space the prose names matches the length the input accepts",
+        "e2e/verdict-coverage.spec.ts:50:1 › check 1: every verdict and every measurement the page renders has a recorded mutation",
+        "e2e/verdict-coverage.spec.ts:155:1 › every recorded mutation still applies to the source it names",
+        "e2e/verdicts.spec.ts:89:1 › recovery-status reports no recovery, and counts the attempt"
+      ]
+    },
+    {
+      "id": "zero-check-inverted",
+      "verdict": "KILLED",
+      "file": "src/verify/zero-check.ts",
+      "markers": [
+        "zero-check",
+        "identity-status"
+      ],
+      "baselineHash": "82ee31789aa4",
+      "mutatedHash": "7e7411cec04a",
+      "restoredHash": "82ee31789aa4",
+      "failingTests": [
+        "e2e/claims.spec.ts:201:1 › identity-status: every check passes in the substituted exchange and the limit is on screen",
+        "e2e/verdict-coverage.spec.ts:155:1 › every recorded mutation still applies to the source it names",
+        "e2e/verdicts.spec.ts:66:1 › zero-check reports the RFC 7748 section 6.1 check on the live exchange"
+      ]
+    },
+    {
+      "id": "agreement-ignores-the-peer",
+      "verdict": "KILLED",
+      "file": "src/exchange/exchange.ts",
+      "markers": [
+        "shared-secret-match"
+      ],
+      "baselineHash": "82ee31789aa4",
+      "mutatedHash": "420fb4bdf506",
+      "restoredHash": "82ee31789aa4",
+      "failingTests": [
+        "e2e/claims.spec.ts:59:1 › the shared secret is what X25519 independently says it should be",
+        "e2e/claims.spec.ts:73:1 › the two sides are two computations, not one value printed twice",
+        "e2e/claims.spec.ts:129:1 › a fresh exchange retires an attempt made against the previous secret",
+        "e2e/verdict-coverage.spec.ts:155:1 › every recorded mutation still applies to the source it names",
+        "e2e/verdicts.spec.ts:57:1 › shared-secret-match renders the measured comparison of the two sides",
+        "e2e/verdicts.spec.ts:102:1 › guess-outcome and recovery-status both turn over for the one value that works"
+      ]
+    },
+    {
+      "id": "impostor-substitutes-nothing",
+      "verdict": "KILLED",
+      "file": "src/exchange/impostor.ts",
+      "markers": [
+        "identity-status"
+      ],
+      "baselineHash": "82ee31789aa4",
+      "mutatedHash": "fd305b375e99",
+      "restoredHash": "82ee31789aa4",
+      "failingTests": [
+        "e2e/claims.spec.ts:201:1 › identity-status: every check passes in the substituted exchange and the limit is on screen",
+        "e2e/claims.spec.ts:243:1 › the substituted exchange really was run against a substituted value",
+        "e2e/verdict-coverage.spec.ts:155:1 › every recorded mutation still applies to the source it names",
+        "e2e/verdicts.spec.ts:118:1 › identity-status renders the substituted exchange as a match"
+      ]
+    },
+    {
+      "id": "guess-counter-stops-counting",
+      "verdict": "KILLED",
+      "file": "src/ui/eavesdrop-panel.ts",
+      "markers": [
+        "guess-count"
+      ],
+      "baselineHash": "82ee31789aa4",
+      "mutatedHash": "daeee3912940",
+      "restoredHash": "82ee31789aa4",
+      "failingTests": [
+        "e2e/claims.spec.ts:129:1 › a fresh exchange retires an attempt made against the previous secret",
+        "e2e/verdict-coverage.spec.ts:50:1 › check 1: every verdict and every measurement the page renders has a recorded mutation",
+        "e2e/verdict-coverage.spec.ts:73:1 › check 2: no verdict word, verdict styling or measurement renders outside a marker",
+        "e2e/verdict-coverage.spec.ts:155:1 › every recorded mutation still applies to the source it names",
+        "e2e/verdicts.spec.ts:89:1 › recovery-status reports no recovery, and counts the attempt"
+      ]
+    },
+    {
+      "id": "negative-claim-softened",
+      "verdict": "KILLED",
+      "file": "src/ui/identity-panel.ts",
+      "markers": [
+        "negative-claim"
+      ],
+      "baselineHash": "82ee31789aa4",
+      "mutatedHash": "98d81f165309",
+      "restoredHash": "82ee31789aa4",
+      "failingTests": [
+        "e2e/claims.spec.ts:201:1 › identity-status: every check passes in the substituted exchange and the limit is on screen",
+        "e2e/verdict-coverage.spec.ts:155:1 › every recorded mutation still applies to the source it names"
+      ]
+    }
+  ]
+}
