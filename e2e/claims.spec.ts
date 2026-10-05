@@ -1,7 +1,7 @@
 import { x25519 } from '@noble/curves/ed25519.js'
 import { expect, test, type Page } from '@playwright/test'
 
-import { expectVerdict } from './expect-verdict.js'
+import { expectClaim, expectVerdict } from './expect-verdict.js'
 
 /**
  * The claims suite (§4.1b): does this page tell the truth?
@@ -97,14 +97,124 @@ test('the private values are never among the values the transcript shows as sent
   await runExchangeAndOpenWorking(page)
   const alicePrivate = await working(page, 'Alice’s private value')
   const bobPrivate = await working(page, 'Bob’s private value')
-  const crossed = await page.locator('#transcript-body .wire-list:not(.wire-list-withheld) code').allInnerTexts()
-  expect(crossed).toHaveLength(3)
-  expect(crossed.map((value) => value.trim())).not.toContain(alicePrivate)
-  expect(crossed.map((value) => value.trim())).not.toContain(bobPrivate)
+  const sent = (
+    await page.locator('#transcript-body .wire-list:not(.wire-list-withheld) code').allInnerTexts()
+  ).map((value) => value.trim())
+  // Two messages crossed the wire plus one value that was already public --
+  // and the already-public one is listed separately, so this is 3 entries
+  // across two lists rather than 3 messages.
+  expect(sent).toHaveLength(3)
+  expect(sent).not.toContain(alicePrivate)
+  expect(sent).not.toContain(bobPrivate)
 
   // The shared secret crossed nothing either -- that is the lab's whole claim.
   const secret = await working(page, 'What Alice computed')
-  expect(crossed.map((value) => value.trim())).not.toContain(secret)
+  expect(sent).not.toContain(secret)
+})
+
+test('a private value is on screen only after the leak disclosure is opened', async ({ page }) => {
+  // The observer boundary. The page may show these -- every role here is
+  // simulated -- but it must not show them in the same breath as "here is
+  // Eve's record", which is what it used to do.
+  await page.locator('#exchange-button').click()
+  await expect(page.locator('#transcript-body')).toBeVisible()
+  await expect(page.locator('#leak-body')).toBeHidden()
+  await expect(page.locator('.wire-list-withheld')).toBeHidden()
+
+  await page.locator('#leak-details summary').click()
+  await expect(page.locator('#leak-body')).toBeVisible()
+  const revealed = (await page.locator('.wire-list-withheld code').allInnerTexts()).map((v) => v.trim())
+  expect(revealed).toHaveLength(2)
+  for (const value of revealed) expect(value).toMatch(HEX)
+})
+
+test('the transcript separates what was already public from what was sent', async ({ page }) => {
+  await page.locator('#exchange-button').click()
+  const headings = await page.locator('#transcript-body h4').allInnerTexts()
+  expect(headings[0]).toContain('Already public')
+  expect(headings[1]).toContain('Sent during this exchange')
+  // One value was already public; two were actually transmitted.
+  const lists = page.locator('#transcript-body .wire-list:not(.wire-list-withheld)')
+  await expect(lists.nth(0).locator('li')).toHaveCount(1)
+  await expect(lists.nth(1).locator('li')).toHaveCount(2)
+})
+
+test("Bob's private value does not recover through this panel, which guesses Alice's", async ({
+  page,
+}) => {
+  // The panel pairs every candidate with the value BOB sent, so Alice's
+  // private value is the one that reproduces the secret. The page says so;
+  // this is the assertion that keeps it saying so.
+  await runExchangeAndOpenWorking(page)
+  const bobPrivate = await working(page, 'Bob\u2019s private value')
+  await page.locator('#candidate-input').fill(bobPrivate)
+  await page.locator('#try-button').click()
+  await expect(page.locator('[data-verdict="recovery-status"] .verdict-headline')).toHaveText(
+    'SHARED SECRET NOT RECOVERED',
+  )
+  await expect(page.locator('#candidate-help')).toContainText('Alice')
+
+  const alicePrivate = await working(page, 'Alice\u2019s private value')
+  await page.locator('#candidate-input').fill(alicePrivate)
+  await page.locator('#try-button').click()
+  await expect(page.locator('[data-verdict="recovery-status"] .verdict-headline')).toHaveText(
+    'SHARED SECRET RECOVERED',
+  )
+})
+
+test('a candidate X25519 treats as identical also recovers, and the page does not claim otherwise', async ({
+  page,
+}) => {
+  // The regression for the "wrong by one bit" repair. Flipping a bit RFC 7748
+  // §5 fixes before use leaves the same private value, so it recovers -- and
+  // the page must not be claiming the candidate was byte-identical.
+  await runExchangeAndOpenWorking(page)
+  const alicePrivate = await working(page, 'Alice\u2019s private value')
+  const bytes = (alicePrivate.match(/../g) ?? []).map((pair) => Number.parseInt(pair, 16))
+  bytes[0] ^= 0b0000_0001
+  const twiddled = bytes.map((b) => b.toString(16).padStart(2, '0')).join('')
+  expect(twiddled).not.toBe(alicePrivate)
+
+  await page.locator('#candidate-input').fill(twiddled)
+  await page.locator('#try-button').click()
+  await expect(page.locator('[data-verdict="recovery-status"] .verdict-headline')).toHaveText(
+    'SHARED SECRET RECOVERED',
+  )
+  const detail = await page.locator('[data-verdict="guess-outcome"] .verdict-detail').innerText()
+  expect(detail).toContain('produced the same secret')
+  expect(detail).not.toContain('wrong by everything')
+})
+
+test('a fresh exchange restarts the per-exchange guess count', async ({ page }) => {
+  await page.locator('#exchange-button').click()
+  for (let i = 0; i < 2; i += 1) {
+    await page.locator('#roll-button').click()
+    await page.locator('#try-button').click()
+  }
+  await expect(page.locator('[data-claim="guess-count"]')).toHaveAttribute('data-value', '2')
+
+  await page.locator('#exchange-button').click()
+  await page.locator('#roll-button').click()
+  await page.locator('#try-button').click()
+  // The count is "guesses against this exchange". Carrying it over reported
+  // "3 guesses" for the first attempt against brand new key material.
+  //
+  // Through expectClaim, not a bare toHaveAttribute: the rendered words and
+  // the machine value are one claim, and e2e/global-teardown.ts requires the
+  // kill recorded for this marker to have been OBSERVED through the helper.
+  await expectClaim(page, 'guess-count', { contains: '1 guess', value: '1' })
+})
+
+test('the analogy says what it does not show, rather than claiming secrecy', async ({ page }) => {
+  // Equal-parts colour mixing is reversible: a watcher holding the public
+  // colour and both mixtures can recover the private colours and mix the
+  // shared one herself. src/ui/mixing.test.ts measures that. The panel must
+  // not tell the reader she cannot.
+  await expect(page.locator('.analogy-lead')).toContainText('does not')
+  await expect(page.locator('.analogy-lead')).toContainText('can be undone')
+  for (let stage = 0; stage < 3; stage += 1) await page.locator('#analogy-step').click()
+  await expect(page.locator('#analogy-watcher')).toContainText('could unmix these')
+  await expect(page.locator('#analogy-caption')).not.toContainText('cannot stir')
 })
 
 test('the guessing space the prose names matches the length the input accepts', async ({ page }) => {

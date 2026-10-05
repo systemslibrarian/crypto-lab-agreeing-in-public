@@ -69,16 +69,79 @@ describe('an eavesdropper guessing a private value', () => {
   })
 })
 
+describe('candidates X25519 treats as identical', () => {
+  /**
+   * The regression for the copy repair. The page used to say a private value
+   * "wrong by one bit is wrong by everything"; RFC 7748 §5 fixes five bits
+   * before use, so a candidate differing only in those bits is the SAME private
+   * value to the function and recovers the secret. Measured here rather than
+   * reasoned about, so the expert note the page now carries cannot drift.
+   */
+  it.each([
+    ['the lowest bit of the first byte', 0, 0b0000_0001],
+    ['the second bit of the first byte', 0, 0b0000_0010],
+    ['the third bit of the first byte', 0, 0b0000_0100],
+    ['the highest bit of the last byte', 31, 0b1000_0000],
+  ])('still recovers when %s is flipped', (_label, index, mask) => {
+    const alice = generateKeyPair()
+    const bob = generateKeyPair()
+    const exchange = runExchange(alice, bob)
+
+    const twiddled = Uint8Array.from(alice.privateValue)
+    twiddled[index] ^= mask
+    expect(toHex(twiddled)).not.toBe(toHex(alice.privateValue))
+
+    const attempt = attemptRecovery(twiddled, bob.publicValue, exchange.aliceSide.shared, 1)
+    expect(attempt.recovered).toBe(true)
+  })
+
+  it('does NOT recover when a bit X25519 actually uses is flipped', () => {
+    // The control. If every flip recovered, the test above would be measuring
+    // a broken comparison rather than the clamping rule.
+    const alice = generateKeyPair()
+    const bob = generateKeyPair()
+    const exchange = runExchange(alice, bob)
+    const twiddled = Uint8Array.from(alice.privateValue)
+    twiddled[0] ^= 0b0000_1000 // bit 3: the lowest bit clamping leaves alone
+    const attempt = attemptRecovery(twiddled, bob.publicValue, exchange.aliceSide.shared, 1)
+    expect(attempt.recovered).toBe(false)
+  })
+
+  it('does not recover from Bob\u2019s private value against Bob\u2019s own public value', () => {
+    // The pairing the page's guess panel actually performs. Bob's private
+    // value needs ALICE's public value, which this exercise never supplies --
+    // which is why the panel scopes itself to guessing Alice's.
+    const alice = generateKeyPair()
+    const bob = generateKeyPair()
+    const exchange = runExchange(alice, bob)
+    const attempt = attemptRecovery(bob.privateValue, bob.publicValue, exchange.aliceSide.shared, 1)
+    expect(attempt.recovered).toBe(false)
+  })
+})
+
 describe('the transcript', () => {
-  it('carries the starting value and both public values, and nothing private', () => {
+  it('carries exactly the two public values as sent, and nothing private', () => {
     const exchange = freshExchange()
     const transcript = transcriptOf(exchange)
-    const crossed = transcript.crossed.map((entry) => entry.value)
-    expect(crossed).toHaveLength(3)
-    expect(crossed).toContain(toHex(exchange.alice.publicValue))
-    expect(crossed).toContain(toHex(exchange.bob.publicValue))
-    expect(crossed).not.toContain(toHex(exchange.alice.privateValue))
-    expect(crossed).not.toContain(toHex(exchange.bob.privateValue))
+    const sent = transcript.sent.map((entry) => entry.value)
+    expect(sent).toEqual([
+      toHex(exchange.alice.publicValue),
+      toHex(exchange.bob.publicValue),
+    ])
+    expect(sent).not.toContain(toHex(exchange.alice.privateValue))
+    expect(sent).not.toContain(toHex(exchange.bob.privateValue))
+  })
+
+  it('counts the starting value as already public rather than as a message', () => {
+    // Two messages cross the wire, not three. The starting value is fixed in
+    // the specification, so listing it as traffic would overcount by one and
+    // invent a per-exchange message.
+    const transcript = transcriptOf(freshExchange())
+    expect(transcript.alreadyPublic).toHaveLength(1)
+    expect(transcript.sent).toHaveLength(2)
+    expect(transcript.alreadyPublic[0].value).toBe(
+      '0900000000000000000000000000000000000000000000000000000000000000',
+    )
   })
 
   it('names both private values as withheld rather than omitting them', () => {
@@ -93,7 +156,11 @@ describe('the transcript', () => {
   it('never lists the shared secret, which crossed nothing', () => {
     const exchange = freshExchange()
     const transcript = transcriptOf(exchange)
-    const everything = [...transcript.crossed, ...transcript.withheld].map((entry) => entry.value)
+    const everything = [
+      ...transcript.alreadyPublic,
+      ...transcript.sent,
+      ...transcript.withheld,
+    ].map((entry) => entry.value)
     expect(everything).not.toContain(toHex(exchange.aliceSide.shared))
   })
 })

@@ -10,8 +10,8 @@
 ## What It Is
 
 A browser-only teaching lab for **X25519 key agreement** as specified in
-[RFC 7748](https://www.rfc-editor.org/rfc/rfc7748) — the curve Diffie–Hellman that your browser
-runs before the first byte of a web page arrives. One real exchange is performed in the page,
+[RFC 7748](https://www.rfc-editor.org/rfc/rfc7748) — one of the key agreements your browser runs
+before the first byte of a web page arrives. One real exchange is performed in the page,
 with `@noble/curves` doing the curve arithmetic, and the two independently computed shared
 secrets are compared byte for byte on screen.
 
@@ -36,11 +36,14 @@ in panel 1, which carries no numbers and is labelled an analogy in the panel its
 ## Exhibits
 
 1. **The picture first.** Two people each start with a colour they keep and one colour everyone
-   can see. They mix, send the mixtures in the open, and mix again — and land on the same colour
-   that a watcher cannot stir from the two mixtures she has. Four stages, advanced one press at
-   a time; no numbers anywhere in it. The mixing model is equal parts of the base colours, which
-   is the one model that actually has the property the picture is drawn to illustrate, and
-   `src/ui/mixing.test.ts` holds it to that.
+   can see. They mix, send the mixtures in the open, and mix again — and land on the same colour,
+   which neither of them sent. Four stages, advanced one press at a time; no numbers anywhere in
+   it. The mixing model is equal parts of the base colours, which is the one model that actually
+   has the commutativity the story needs. **The panel also says, in the panel, what the picture
+   does not show: secrecy.** Averaging is reversible, so a watcher holding the public colour and
+   both mixtures can recover the private colours and mix the shared one herself —
+   `src/ui/mixing.test.ts` asserts that she can, so the limitation is a measured fact rather than
+   a hedge, and it is the precise reason panel 2 is not optional.
 
 2. **The real exchange.** Before anything is pressed, the page runs RFC 7748 §5.2's published
    vectors through the real function in your browser and reports the result — so "this is the
@@ -53,13 +56,21 @@ in panel 1, which carries no numbers and is labelled an analogy in the panel its
    full, states the exchange in RFC 7748 §6.1's own notation, and reports the §6.1 all-zero check.
 
 3. **What the eavesdropper has.** The complete transcript — the starting value and both published
-   values — shown as ordinary and complete, with both private values named as withheld rather
-   than quietly omitted. Then you can **try to break it yourself against the real primitive**:
+   values — shown as ordinary and complete, and separating what was **already public** (the
+   starting value, fixed in the specification) from what was **sent during this exchange** (two
+   messages, not three). The private values are named as withheld and are reachable only through
+   an explicitly labelled "simulate a leak" disclosure, so the page never shows "here is the
+   watcher's record" and both secrets in the same breath. Then you can **try to break it yourself against the real primitive**:
    roll or paste a candidate private value, and the page runs the same X25519 and the same
-   comparison, and reports what it measured. The framing is honest: not "this is impossible", but
-   that nobody knows a way and the whole of modern key exchange rests on that. Supply one of the
-   two real private values and the panel reports recovery — the verdict is wired to a measurement,
-   not to a constant.
+   comparison, and reports what it measured. The exercise guesses **Alice's** private value
+   specifically and pairs each candidate with the value Bob sent, which is the pairing that would
+   reproduce the secret; the panel says so rather than implying either private value would do.
+   Supply Alice's actual value and the panel reports recovery — the verdict is wired to a
+   measurement, not to a constant — and labels it as a leaked input rather than a break of the
+   transcript. The framing is honest: not "this is impossible", but that no practical method is
+   known, and that this panel explores guessing rather than every possible attack. A separate
+   disclosure explains why some *different* candidates recover too: RFC 7748 §5 fixes five bits
+   before use, so candidates differing only in those are the same private value.
 
 4. **What the secret is for, and the one thing it is not.** The shared secret becomes the key that
    encrypts the rest of the conversation. Then the negative claim, built rather than asserted:
@@ -97,8 +108,12 @@ is stored.
   Alice's secret matches the secret held by whoever sent the value she received. Nothing in X25519
   says who that was, and there is no error code when it is not who she expected.
 - **Trusting the analogy too far.** Equal-parts paint mixing has the commutativity the story needs
-  and nothing else about X25519. It is labelled an analogy in the panel, and panel 2 is the real
-  thing on purpose.
+  and none of the one-wayness. A watcher *can* unmix it; the panel says so and a unit test proves
+  it. It is labelled an analogy, and panel 2 is the real thing on purpose.
+- **Reading the size of the guessing space as the strength of the cipher.** The space of distinct
+  private values is 76 digits long; the figure usually quoted for X25519's strength is lower,
+  because the best known attacks do better than trying every value. Neither number is on the main
+  path, and the expert disclosure says why.
 - **A public value of low order.** RFC 7748 §6.1 notes that both parties may check whether the
   resulting value is all-zero and abort. The lab performs that check and reports it;
   `@noble/curves` additionally refuses such a value before an all-zero result could be returned,
@@ -144,8 +159,8 @@ npm run preview      # serves dist/ on port 4731
 ## Build & Verify
 
 ```bash
-npm test             # 60 unit tests, 8 files
-npm run test:a11y    # the WCAG 2.1 AA gate and the claims suite, 26 browser tests
+npm test             # 70 unit tests, 8 files
+npm run test:a11y    # the WCAG 2.1 AA gate and the claims suite, 32 browser tests
 npm run test:verdicts # the verdict, claims and marker-coverage suites
 npm run test:mutation # applies every recorded mutation and judges each result
 ```

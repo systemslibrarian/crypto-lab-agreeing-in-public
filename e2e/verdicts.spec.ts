@@ -49,7 +49,7 @@ test('spec-vectors reports the measured check against the RFC 7748 vectors', asy
   // Runs at mount, before anything is pressed: the page's claim to be using
   // the real function is a result on arrival rather than a promise.
   await expectVerdict(page, 'spec-vectors', {
-    contains: 'MATCHES THE PUBLISHED VECTORS',
+    contains: 'MATCHES THE PUBLISHED EXAMPLES',
     result: 'pass',
   })
 })

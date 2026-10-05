@@ -60,7 +60,7 @@
         "spec-vectors": {
           "test": "spec-vectors reports the measured check against the RFC 7748 vectors",
           "claim": {
-            "contains": "MATCHES THE PUBLISHED VECTORS",
+            "contains": "MATCHES THE PUBLISHED EXAMPLES",
             "result": "pass"
           }
         },
@@ -177,6 +177,21 @@
           "claim": {
             "contains": "tells you nothing about who you agreed with",
             "result": "idle"
+          }
+        }
+      }
+    },
+    "fresh-exchange-keeps-counting": {
+      "file": "src/ui/eavesdrop-panel.ts",
+      "find": "    attempts = 0\n    if (hadAttempts) {",
+      "replace": "    if (hadAttempts) {",
+      "why": "The guess counter carrying over across a fresh exchange: the mutation DELETES the reset. That is the behaviour the counter had before this repair, and it reported \"4 guesses\" for the first attempt against brand new key material -- a number true of the session and false of the sentence holding it, which says \"against this exchange\". Deleting the line rather than neutering it is deliberate: `attempts = attempts` folds away in minification and the bundle hash would not move, which rule 3 refuses as a kill whether or not the behaviour changed.",
+      "kills": {
+        "guess-count": {
+          "test": "a fresh exchange restarts the per-exchange guess count",
+          "claim": {
+            "contains": "1 guess",
+            "value": "1"
           }
         }
       }

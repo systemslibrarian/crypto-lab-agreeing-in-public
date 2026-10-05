@@ -1,6 +1,7 @@
 import { freshSubstitutedExchange } from '../exchange/impostor.js'
 import { toHex } from '../x25519/bytes.js'
 import { byteStrip, bytePrefix } from './byte-strip.js'
+import { announce } from './announce.js'
 import { clear, el, verdict } from './dom.js'
 
 /**
@@ -70,8 +71,8 @@ export function identityPanel(): HTMLElement {
                   },
                   [`${toHex(run.aliceSide.shared).slice(0, 16)}…`],
                 ),
-                ' on both sides, exactly as it was in panel 2. Here is every check this page ',
-                'performs, run against this exchange:',
+                ' on both sides — the same arrival panel 2 showed, reached the same way. Here is every ',
+                'check this page performs, run against this exchange:',
               ]),
               el(
                 'ul',
@@ -118,8 +119,8 @@ export function identityPanel(): HTMLElement {
           { href: 'https://systemslibrarian.github.io/crypto-lab-diffie-hellman-mitm/' },
           ['DH MITM'],
         ),
-        '. The fix is to tie a public value to an identity before you use it, which is what a signature ',
-        'and a certificate are for — ',
+        '. The fix is not a better comparison: a full protocol has to authenticate the peer and bind ',
+        'that authentication to this exchange, which is what signatures and certificates are for — ',
         el('a', { href: 'https://systemslibrarian.github.io/crypto-lab-https-padlock/' }, [
           'The HTTPS Padlock',
         ]),
@@ -128,21 +129,32 @@ export function identityPanel(): HTMLElement {
     )
     output.hidden = false
     substitute.textContent = 'Try it with another stranger'
+    announce(
+      run.match
+        ? 'The stranger exchange matched. Every check on the page passed, and who answered is still unknown.'
+        : 'The stranger exchange did not match. Something on this page is wrong.',
+    )
   })
 
   return el('section', { class: 'band identity-band', 'aria-labelledby': 'identity-heading' }, [
     el('p', { class: 'eyebrow' }, ['Panel 4 — what it buys, and what it does not']),
     el('h2', { id: 'identity-heading' }, ['What the secret is for']),
     el('p', { class: 'band-lead' }, [
-      'Those 32 bytes are not the end of anything — they are a key. Everything said after this point gets ',
-      'encrypted with a key derived from them, which is why both sides needed the same value and why ',
-      'neither could afford to send it. That is what your browser is doing before the first byte of a ',
-      'page arrives.',
+      'Those 32 bytes are not the end of anything, and they are not quite a key either: they are ',
+      el('strong', {}, ['shared secret material']),
+      '. Real applications run them through a key-derivation step and encrypt the rest of the ',
+      'conversation with what comes out — which is why both sides needed the same value and why ',
+      'neither could afford to send it. That derivation step is not performed on this page.',
     ]),
     el('p', { class: 'band-lead' }, [
       'And now the part that is easy to walk away from this page believing wrongly. You might think: we ',
       'agreed on a secret, so I know who I agreed with. Press the button and watch what happens when ',
       'somebody else answers in Bob’s place.',
+    ]),
+    el('p', { class: 'band-note' }, [
+      el('strong', {}, ['A separate example. ']),
+      'This runs its own fresh exchange rather than continuing the one in panel 2 — a different Alice, ',
+      'a different Bob, and somebody else answering. Nothing above is affected by pressing it.',
     ]),
     el('div', { class: 'band-controls' }, [substitute]),
     output,

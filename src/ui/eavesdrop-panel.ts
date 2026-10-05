@@ -4,6 +4,7 @@ import { KEYSPACE_DIGITS } from '../eavesdrop/keyspace.js'
 import { generateKeyPair } from '../x25519/agree.js'
 import { fromHex, toHex } from '../x25519/bytes.js'
 import { byteStrip, bytePrefix } from './byte-strip.js'
+import { announce } from './announce.js'
 import { claim, clear, el, verdict } from './dom.js'
 import type { Lab } from './state.js'
 import type { Exchange } from '../exchange/exchange.js'
@@ -15,16 +16,24 @@ const CANDIDATE_HEX_LENGTH = 64
  * Panel 3 — what the eavesdropper has.
  *
  * Her transcript is shown IN FULL and read as ordinary, because that is the
- * point: nothing was hidden from her and it still is not enough. The two
- * private values are named as withheld rather than omitted, so the page is not
- * quietly implying there was more traffic than there was.
+ * point: nothing was hidden from her and it still is not enough. It separates
+ * what was ALREADY PUBLIC from what was SENT, so the page does not imply a
+ * third message that never existed, and the two private values sit behind an
+ * explicitly labelled leak disclosure rather than beside the watcher's own
+ * record — showing both in one breath was honest in its wording and
+ * contradictory on the screen.
  *
  * Then she gets to try. The function that turns the transcript into the shared
  * secret needs a private value, and she has none, so the only move available is
  * to supply one and see — which is exactly what this panel lets the reader do,
- * against the real X25519 and the real comparison. The honest framing is on
- * screen: not "this is impossible", but that nobody knows a way, and that the
- * whole of modern key exchange is resting on that.
+ * against the real X25519 and the real comparison. The exercise is scoped to
+ * guessing ALICE's private value, because every candidate is paired with the
+ * value Bob sent and that is the pairing which would reproduce the secret; the
+ * panel says so rather than implying either private value would do.
+ *
+ * The honest framing is on screen: not "this is impossible", but that no
+ * practical method is known, and that this panel explores guessing rather than
+ * every possible attack.
  */
 export function eavesdropPanel(lab: Lab): HTMLElement {
   let attempts = 0
@@ -61,37 +70,48 @@ export function eavesdropPanel(lab: Lab): HTMLElement {
     'Try this value',
   ])
 
+  function wireEntries(entries: readonly { label: string; value: string; note: string }[], extraClass = ''): HTMLElement {
+    return el(
+      'ul',
+      { class: `wire-list ${extraClass}`.trim(), role: 'list' },
+      entries.map((entry) =>
+        el('li', { class: 'wire-entry', role: 'listitem' }, [
+          el('span', { class: 'wire-label' }, [entry.label]),
+          el('code', { class: 'full-hex' }, [entry.value]),
+          el('span', { class: 'wire-note' }, [entry.note]),
+        ]),
+      ),
+    )
+  }
+
   function renderTranscript(exchange: Exchange): void {
     const transcript = transcriptOf(exchange)
     clear(transcriptBody)
     transcriptBody.append(
-      el('h4', {}, ['Everything that crossed the wire']),
-      el(
-        'ul',
-        { class: 'wire-list', role: 'list' },
-        transcript.crossed.map((entry) =>
-          el('li', { class: 'wire-entry', role: 'listitem' }, [
-            el('span', { class: 'wire-label' }, [entry.label]),
-            el('code', { class: 'full-hex' }, [entry.value]),
-            el('span', { class: 'wire-note' }, [entry.note]),
-          ]),
-        ),
-      ),
-      el('h4', {}, ['What never crossed it']),
-      el(
-        'ul',
-        { class: 'wire-list wire-list-withheld', role: 'list' },
-        transcript.withheld.map((entry) =>
-          el('li', { class: 'wire-entry', role: 'listitem' }, [
-            el('span', { class: 'wire-label' }, [entry.label]),
-            el('code', { class: 'full-hex' }, [entry.value]),
-            el('span', { class: 'wire-note' }, [entry.note]),
-          ]),
-        ),
-      ),
+      el('h4', {}, ['Already public before they started']),
+      wireEntries(transcript.alreadyPublic),
+      el('h4', {}, ['Sent during this exchange']),
+      wireEntries(transcript.sent),
       el('p', { class: 'wire-conclusion' }, [
-        'That is the complete record. An observer who saw every message sent has the three values in the ',
-        'first list and nothing else — and the shared secret is not among them, because it was never sent.',
+        'That is the complete record. Two messages crossed the wire, and the shared secret is not ',
+        'among them, because it was never sent. What Eve is missing is not a message — it is an ',
+        'input: each side also used a private value that stayed on its own machine.',
+      ]),
+      // The private values are a LEAK, not part of the record, so they sit
+      // behind a control the reader has to operate and a heading that says what
+      // opening it means. Showing them inline beside "here is Eve's record" was
+      // honest in its wording and contradictory on the screen -- the page said
+      // "you are the watcher" and displayed both secrets in the same breath.
+      el('details', { class: 'leak', id: 'leak-details' }, [
+        el('summary', {}, ['Simulate a leak — reveal what a real watcher does not have']),
+        el('div', { class: 'leak-body', id: 'leak-body' }, [
+          el('p', { class: 'leak-note' }, [
+            'Opening this is not an attack on the transcript above. It is a different situation: a ',
+            'machine that was broken into, or an owner who was careless. Every role on this page is ',
+            'simulated in your browser, so the page can show you these — a real watcher cannot.',
+          ]),
+          wireEntries(transcript.withheld, 'wire-list-withheld'),
+        ]),
       ]),
     )
   }
@@ -142,11 +162,11 @@ export function eavesdropPanel(lab: Lab): HTMLElement {
         attempt.sameAsReal ? 'THE SAME 32 BYTES' : 'NOT THE SAME BYTES',
         attempt.sameAsReal
           ? [
-              'This guess produced the real shared secret. With a value you rolled at random that will not ',
-              'happen; it happens when the value you pasted was one of the two private values above.',
+              'This candidate produced the same secret. A value rolled at random will not; this happens ',
+              'when the candidate is Alice’s own private value, or one X25519 treats as identical to it.',
             ]
           : [
-              `The two values part company at byte ${attempt.firstDifferentByte}. A private value that is wrong by one bit is wrong by everything — there is no getting warmer.`,
+              `The two values part company at byte ${attempt.firstDifferentByte}. Nearby guesses give you no "getting warmer" signal: a candidate that is almost right produces a result that is no closer than one that is completely wrong.`,
             ],
       ),
       verdict(
@@ -155,16 +175,27 @@ export function eavesdropPanel(lab: Lab): HTMLElement {
         attempt.recovered ? '!' : '✗',
         attempt.recovered ? 'SHARED SECRET RECOVERED' : 'SHARED SECRET NOT RECOVERED',
         attempt.recovered
-          ? ['The value supplied was a private value from this exchange, so this is not an attack on the transcript — it is being told the answer.']
+          ? [
+              'This is not an attack on the transcript. The candidate supplied the missing input directly, ',
+              'which is what a leaked or stolen private value would do — a compromised machine, not a ',
+              'recording. It is being told the answer rather than working it out.',
+            ]
           : [
               'That is ',
               claim('guess-count', String(attempts), `${attempts} ${attempts === 1 ? 'guess' : 'guesses'}`),
-              ` so far, out of a space of private values ${KEYSPACE_DIGITS} digits long. Guessing is not a plan, and `,
-              'no shortcut is known: nobody has published a way to get from that transcript to this secret. ',
-              'The honest statement is not that it is impossible — it is that nobody knows how, and that the ',
-              'whole of modern key exchange is resting on that.',
+              ' against this exchange, out of a space of private values ',
+              `${KEYSPACE_DIGITS} digits long. Guessing is not a plan — but guessing is also not the `,
+              'only thing an attacker could try, and this panel only explores guessing. The honest ',
+              'statement about the rest is this: no practical method is known for computing this secret ',
+              'from those two public values alone, assuming the private values were generated properly. ',
+              'Not that it is impossible — that nobody has published a way.',
             ],
       ),
+    )
+    announce(
+      attempt.recovered
+        ? 'That candidate produced the shared secret.'
+        : 'That candidate did not produce the shared secret.',
     )
   }
 
@@ -221,6 +252,7 @@ export function eavesdropPanel(lab: Lab): HTMLElement {
   function renderInvalid(message: string): void {
     clear(notice)
     notice.append(el('p', { class: 'invalid-note', id: 'invalid-note' }, [message]))
+    announce(`Nothing was run. ${message}`)
     clear(output)
     output.append(
       verdict('recovery-status', 'idle', '—', 'SHARED SECRET NOT RECOVERED', [
@@ -236,8 +268,14 @@ export function eavesdropPanel(lab: Lab): HTMLElement {
     input.disabled = false
     roll.disabled = false
     tryIt.disabled = false
-    if (attempts > 0) {
-      retire('A fresh exchange replaced the one your last attempt was made against, so that attempt was retired.')
+    const hadAttempts = attempts > 0
+    // The count is "guesses against THIS exchange", so a fresh exchange starts
+    // it again. Carrying it over made the first guess against new key material
+    // report "4 guesses" beside a secret it had never been tried against --
+    // a number that was true of the session and false of the sentence holding it.
+    attempts = 0
+    if (hadAttempts) {
+      retire('A fresh exchange replaced the one your last attempt was made against, so that attempt was retired and the count starts again.')
     } else {
       renderIdle()
     }
@@ -259,16 +297,40 @@ export function eavesdropPanel(lab: Lab): HTMLElement {
     waiting,
     transcriptBody,
     el('div', { class: 'guess-box' }, [
-      el('h4', {}, ['Let her try']),
+      el('h4', {}, ['Let her try: guess Alice’s private value']),
       el('p', { id: 'candidate-help', class: 'guess-help' }, [
-        'The function that turns this transcript into the shared secret needs a private value, and she has ',
-        'neither of them. So the only move she has is to supply one and see. A private value is 32 bytes, ',
-        'written as 64 characters from 0-9 and a-f — roll one at random, or paste anything you like.',
+        'The function that turns this transcript into the shared secret needs a private value, and Eve ',
+        'has neither of them. So the only move she has is to supply one and see. This exercise guesses ',
+        el('strong', {}, ['Alice’s']),
+        ' private value specifically, and combines each candidate with the value Bob sent — that is the ',
+        'pairing that would reproduce the secret. (Guessing Bob’s would mean pairing it with Alice’s ',
+        'value instead; one direction is enough to make the point.) A private value is 32 bytes, written ',
+        'as 64 characters from 0-9 and a-f — roll one at random, or paste anything you like.',
       ]),
       el('div', { class: 'guess-controls' }, [
         el('label', { class: 'guess-label', for: 'candidate-input' }, ['Candidate private value']),
         input,
         el('div', { class: 'guess-buttons' }, [roll, tryIt]),
+      ]),
+      // Expert disclosure. A beginner does not need clamping to follow the
+      // panel, but the page must not tell them something false on the way past
+      // -- which is what "wrong by one bit is wrong by everything" was.
+      el('details', { class: 'equivalents', id: 'equivalents-details' }, [
+        el('summary', {}, ['Why some different candidates give the same answer']),
+        el('p', {}, [
+          'X25519 does not use the 32 bytes exactly as you type them. RFC 7748 §5 fixes five of the ',
+          '256 bits before the value is used — three at one end, two at the other — so two candidates ',
+          'differing only in those five bits are the same private value as far as the function is ',
+          'concerned, and produce the same secret. Change the last bit of a working candidate and it ',
+          'still works; that is this rule, not a weakness. It is also why the space of genuinely ',
+          'distinct private values is smaller than 32 random bytes would suggest.',
+        ]),
+        el('p', {}, [
+          'And the size of that space is not the same thing as the difficulty of the best known attack. ',
+          'The figure usually quoted for X25519’s strength is lower than the size of the space, because ',
+          'the best known attacks do better than trying every value. Neither number is on the main path ',
+          'here, because neither changes what this panel demonstrates.',
+        ]),
       ]),
     ]),
     notice,

@@ -133,11 +133,12 @@ const STAGES: readonly Stage[] = [
       'wire-bob-mixture',
       'bob-own',
     ],
-    watcher: 'A watcher has these two mixtures, and the public colour. That is everything that was sent.',
+    watcher:
+      'A watcher has these two mixtures, and the public colour. That is everything that was sent.',
   },
   {
     caption:
-      'Each stirs their own colour into the mixture that arrived. Both are now holding equal parts of all three colours — so both are holding the same colour, and the watcher cannot stir it from what she has.',
+      'Each stirs their own colour into the mixture that arrived. Both are now holding equal parts of all three colours, so both are holding the same colour — and neither of them ever sent it.',
     visible: [
       'alice-own',
       'alice-final',
@@ -146,7 +147,8 @@ const STAGES: readonly Stage[] = [
       'bob-own',
       'bob-final',
     ],
-    watcher: 'A watcher still has only the two mixtures. Her colours are the ones in the middle; neither is the one on either side of her.',
+    watcher:
+      'Here is where the picture stops being true. A real watcher could unmix these: averaging can be undone, so from the public colour and the two mixtures she can work out both private colours and stir the shared one herself. Paint is not a one-way operation. The next panel replaces the mixing with one that, as far as anyone knows, cannot be undone.',
   },
 ]
 
@@ -221,8 +223,12 @@ export function analogyPanel(): HTMLElement {
     el('p', { class: 'analogy-lead' }, [
       'Before any of the real thing: a picture. This is an ',
       el('strong', {}, ['analogy']),
-      ', not the mechanism — there are no numbers in it, and the next panel is the real exchange. ',
-      'Read it for the shape of the trick: what gets sent, what never does, and why watching is not enough.',
+      ', not the mechanism. Read it for one thing only — ',
+      el('strong', {}, ['what is kept, what is sent, and why both sides end up with the same thing']),
+      '. It shows that shape honestly. What it does ',
+      el('em', {}, ['not']),
+      ' show is secrecy: mixing colours by equal parts can be undone with arithmetic, so a watcher ',
+      'could work this one out. Panel 2 is where the mixing becomes an operation nobody knows how to undo.',
     ]),
     el('div', { class: 'analogy', 'data-analogy': 'paint' }, [
       progress,

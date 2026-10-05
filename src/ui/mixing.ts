@@ -41,3 +41,27 @@ export const ALICE_MIXTURE = combine([PUBLIC_COLOUR, ALICE_COLOUR])
 export const BOB_MIXTURE = combine([PUBLIC_COLOUR, BOB_COLOUR])
 /** Where both of them end up, by two different routes. */
 export const SHARED_COLOUR = combine([PUBLIC_COLOUR, ALICE_COLOUR, BOB_COLOUR])
+
+/**
+ * What a watcher can work out from the public colour and the two mixtures.
+ *
+ * THIS IS THE REASON THE PICTURE IS ONLY A PICTURE, and it is computed here
+ * rather than hedged in prose. Averaging is reversible: given the public colour
+ * P and a mixture M = (P + X) / 2, anyone can recover X = 2M - P, and from both
+ * recovered colours they can mix the final one themselves. So in the paint
+ * story the watcher CAN reach the shared colour — exactly what X25519 does not
+ * let her do, and the whole reason panel 2 exists.
+ *
+ * src/ui/mixing.test.ts asserts this succeeds. A test that proved the watcher
+ * failed would be asserting something false about this arithmetic, and the
+ * panel's copy is written against what this function actually returns.
+ */
+export function watcherReconstruction(
+  publicColour: Rgb,
+  aliceMixture: Rgb,
+  bobMixture: Rgb,
+): Rgb {
+  const unmix = (mixture: Rgb): Rgb =>
+    [0, 1, 2].map((channel) => 2 * mixture[channel] - publicColour[channel]) as unknown as Rgb
+  return combine([publicColour, unmix(aliceMixture), unmix(bobMixture)])
+}

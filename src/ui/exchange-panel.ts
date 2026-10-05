@@ -1,6 +1,7 @@
 import { toHex } from '../x25519/bytes.js'
 import { checkSection52Vectors } from '../x25519/agree.js'
 import { byteStrip, bytePrefix } from './byte-strip.js'
+import { announce } from './announce.js'
 import { clear, el, verdict } from './dom.js'
 import type { Lab } from './state.js'
 import type { Exchange } from '../exchange/exchange.js'
@@ -41,26 +42,49 @@ export function exchangePanel(lab: Lab): HTMLElement {
           el('h4', {}, ['Alice sends']),
           byteStrip('The value Alice sends', exchange.alice.publicValue),
           bytePrefix(exchange.alice.publicValue),
+          el('p', { class: 'ownership' }, [
+            'Made on Alice’s device from her private value and the public starting value.',
+          ]),
         ]),
         el('div', { class: 'sent-value' }, [
           el('h4', {}, ['Bob sends']),
           byteStrip('The value Bob sends', exchange.bob.publicValue),
           bytePrefix(exchange.bob.publicValue),
+          el('p', { class: 'ownership' }, [
+            'Made on Bob’s device from his private value and the same public starting value.',
+          ]),
         ]),
       ]),
       el('p', { class: 'crossing-note' }, [
-        'Those two crossed in the open. Each of them now combines the one that arrived with the private value they kept.',
+        'Those two crossed in the open — the only things that did. Each tile above is one byte; the ',
+        'colours are there so two values can be compared at a glance, and the words below say what the ',
+        'comparison actually found. Each side now combines the value that arrived with the private ',
+        'value it kept.',
       ]),
       el('div', { class: 'secret-compare', id: 'secret-compare' }, [
         el('div', { class: 'secret-side' }, [
           el('h4', {}, ['What Alice is holding']),
           byteStrip('The secret Alice computed', aliceSecret),
           bytePrefix(aliceSecret),
+          el('p', { class: 'ownership' }, [
+            'Computed on her device from ',
+            el('strong', {}, ['her own private value']),
+            ' and ',
+            el('strong', {}, ['the value Bob sent']),
+            '.',
+          ]),
         ]),
         el('div', { class: 'secret-side' }, [
           el('h4', {}, ['What Bob is holding']),
           byteStrip('The secret Bob computed', bobSecret),
           bytePrefix(bobSecret),
+          el('p', { class: 'ownership' }, [
+            'Computed on his device from ',
+            el('strong', {}, ['his own private value']),
+            ' and ',
+            el('strong', {}, ['the value Alice sent']),
+            '.',
+          ]),
         ]),
       ]),
       verdict(
@@ -89,6 +113,11 @@ export function exchangePanel(lab: Lab): HTMLElement {
     )
     output.hidden = false
     run.textContent = 'Run a fresh exchange'
+    announce(
+      exchange.match
+        ? 'Exchange complete. Alice and Bob each computed a secret separately, and the page compared them: they are the same.'
+        : 'Exchange complete, but the two sides did not agree. Something on this page is wrong.',
+    )
   }
 
   run.addEventListener('click', () => render(lab.run()))
@@ -125,10 +154,11 @@ function vectorCheck(): HTMLElement {
       'spec-vectors',
       allMatch ? 'pass' : 'alarm',
       allMatch ? '✓' : '✗',
-      allMatch ? 'MATCHES THE PUBLISHED VECTORS' : 'DOES NOT MATCH THE PUBLISHED VECTORS',
+      allMatch ? 'MATCHES THE PUBLISHED EXAMPLES' : 'DOES NOT MATCH THE PUBLISHED EXAMPLES',
       [
-        'RFC 7748 §5.2 publishes worked examples with the answers. This page just ran the real function ',
-        'against them in your browser, and ',
+        'A specification can publish worked examples with the answers already in them, so that anyone ',
+        'can check an implementation against the same numbers. RFC 7748 §5.2 does. This page just ran ',
+        'the real function against them in your browser, and ',
         allMatch
           ? 'got the published answer every time. That is checked here rather than asserted, because it is the one thing you would otherwise have to take on trust.'
           : 'did not get the published answer. Do not trust anything else on this page.',

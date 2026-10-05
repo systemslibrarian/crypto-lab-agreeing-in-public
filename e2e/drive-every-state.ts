@@ -21,6 +21,8 @@ import { expect, type Page } from '@playwright/test'
  * | `#analogy-step` | all four stages, plus the fifth press that wraps to stage one |
  * | `#exchange-button` | before its first press, after it, and after a second press (a fresh exchange, which retires a standing attempt) |
  * | `#working-details` | shut at arrival, opened through its own summary |
+ * | `#leak-details` | shut at arrival, opened through its own summary (the only way a private value reaches the screen) |
+ * | `#equivalents-details` | shut at arrival, opened with the rest |
  * | `#roll-button` | its one press |
  * | `#try-button` | a rolled guess, a value that is not hex, a value of the wrong length, and the one value that DOES recover (Alice's own, read off the page) |
  * | `#candidate-input` | disabled at arrival, enabled after an exchange, edited to retire a standing attempt, and re-entered unchanged as the no-op |
@@ -64,6 +66,10 @@ export async function driveEveryState(
   await page.locator('#working-details summary').click()
   await expect(page.locator('#working-details')).toHaveAttribute('open', '')
   await visit('working disclosure open')
+
+  await page.locator('#leak-details summary').click()
+  await expect(page.locator('#leak-details')).toHaveAttribute('open', '')
+  await visit('leak disclosure opened')
 
   await page.locator('#roll-button').click()
   await expect(page.locator('#candidate-input')).toHaveValue(/^[0-9a-f]{64}$/)
@@ -109,7 +115,14 @@ export async function driveEveryState(
 
   await page.locator('#exchange-button').click()
   await expect(page.locator('#retired-note')).toBeVisible()
-  await visit('fresh exchange retires the standing attempt')
+  await visit('fresh exchange retires the standing attempt and restarts the count')
+
+  // The count after a fresh exchange is its own rendered state: it must read
+  // as the first guess against the new exchange, not the fifth of the session.
+  await page.locator('#roll-button').click()
+  await page.locator('#try-button').click()
+  await expect(page.locator('[data-claim="guess-count"]')).toHaveAttribute('data-value', '1')
+  await visit('first guess against the fresh exchange')
 
   await page.locator('#impostor-button').click()
   await expect(page.locator('#identity-output')).toBeVisible()

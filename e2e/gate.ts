@@ -68,6 +68,11 @@ export async function boot(page: Page): Promise<void> {
   await expect(page.locator('#exchange-output')).toBeHidden()
   await expect(page.locator('#identity-output')).toBeHidden()
   await expect(page.locator('#working-details')).toHaveCount(0)
+  // The leak and equivalents disclosures exist at arrival but are shut: a
+  // reader must operate them, and a private value is never on screen until
+  // they do.
+  await expect(page.locator('#leak-details')).toHaveCount(0)
+  await expect(page.locator('#equivalents-details')).toHaveCount(1)
   await expect(page.locator('details[open]')).toHaveCount(0)
   await expect(page.locator('#candidate-input')).toBeDisabled()
   await expect(page.locator('#candidate-input')).toHaveAttribute('maxlength', '64')
@@ -174,6 +179,8 @@ export async function scan(page: Page, label: string): Promise<void> {
  * | `#analogy-step` | all four stages, plus the fifth press that wraps to stage one |
  * | `#exchange-button` | before the first press, after it, and after a SECOND press (fresh exchange) |
  * | `#working-details` | shut, then opened through its own summary |
+ * | `#leak-details` | shut at arrival, opened through its own summary |
+ * | `#equivalents-details` | shut at arrival, opened with the rest |
  * | `#roll-button` | its one press |
  * | `#try-button` | a rolled guess, a non-hex value, a short value |
  * | `#candidate-input` | disabled at arrival, enabled after the exchange, edited to retire a standing attempt |
@@ -210,6 +217,10 @@ export async function driveAllStates(page: Page, prefix: string): Promise<void> 
   await page.locator('#working-details summary').click()
   await expect(page.locator('#working-details')).toHaveAttribute('open', '')
   await scanAt('working disclosure open')
+
+  await page.locator('#leak-details summary').click()
+  await expect(page.locator('#leak-details')).toHaveAttribute('open', '')
+  await scanAt('leak disclosure opened')
 
   await page.locator('#roll-button').click()
   await expect(page.locator('#candidate-input')).toHaveValue(/^[0-9a-f]{64}$/)
