@@ -1,0 +1,185 @@
+{
+  "comment": [
+    "Every outcome this page renders carries data-verdict=\"<id>\" and every number it reports",
+    "about a run carries data-claim=\"<id>\". Each id below is killed by at least one mutation",
+    "recorded here: a single-token edit to REAL SOURCE that forces the measured value the other",
+    "way. A kill counts only when the owning test PASSED unmutated in the same run, the patch",
+    "actually CHANGED the file, the run served the MUTATED code, and the failure is that",
+    "marker's own assertion -- not a build error, a blank page, or the whole suite going red.",
+    "A patch that does not compile is DOES NOT BUILD and is never a kill.",
+    "",
+    "`kills` names, per marker, the TEST and the exact CLAIM that kills it. That is not",
+    "documentation: e2e/global-teardown.ts requires each of those to have been OBSERVED",
+    "executing. expectVerdict/expectClaim record every (test, marker, claim) they run, and the",
+    "rule is checked against that record rather than against the spec's source text -- a mention",
+    "is not an assertion. See e2e/observations.ts for the three ways a source scan was defeated",
+    "elsewhere in this lane. There is no separate `covers` list: the keys of `kills` ARE the",
+    "covered set, so the two cannot disagree.",
+    "",
+    "e2e/verdict-coverage.spec.ts fails if the page renders a marker no mutation covers, if a",
+    "mutation names a marker the page never renders, or if a mutation's `find` string no longer",
+    "appears exactly once in its file -- a rotted mutation guards nothing.",
+    "",
+    "Run them: node scripts/mutate.mjs run    (or `apply <id>` / `revert <id>` for one, by hand)",
+    "",
+    "Two values this page renders are deliberately NOT markers: the shared secret and the",
+    "substituted exchange's secret are fresh random key material every run, and a recorded kill",
+    "has to pin the exact claim it asserts. They carry data-test hooks instead, and",
+    "e2e/claims.spec.ts re-derives both independently through the library rather than reading",
+    "the page's own answer back to it."
+  ],
+  "mutations": {
+    "comparison-always-identical": {
+      "file": "src/verify/compare.ts",
+      "find": "  return left.every((byte, index) => byte === right[index])",
+      "replace": "  return true",
+      "why": "The one comparison in the lab, hard-wired to 'the same bytes'. The headline verdict is correct by accident under this, so what catches it is the eavesdropper's refused guess -- the only state the page renders where two values legitimately differ. A lab that could not render a mismatch would have nothing for this mutation to kill, which is why the guess panel exists as a measurement rather than as an illustration.",
+      "kills": {
+        "guess-outcome": {
+          "test": "guess-outcome renders the byte comparison of a guess against the real secret",
+          "claim": {
+            "contains": "NOT THE SAME BYTES",
+            "result": "pass"
+          }
+        },
+        "recovery-status": {
+          "test": "recovery-status reports no recovery, and counts the attempt",
+          "claim": {
+            "contains": "SHARED SECRET NOT RECOVERED",
+            "result": "pass"
+          }
+        }
+      }
+    },
+    "comparison-always-different": {
+      "file": "src/verify/compare.ts",
+      "find": "  return left.every((byte, index) => byte === right[index])",
+      "replace": "  return false",
+      "why": "The same comparison hard-wired the other way. This one reaches every verdict that reports agreement: the headline, the on-page RFC 7748 §5.2 vector check, and the substituted exchange in panel 4. Three markers in three panels going red together is the evidence that they share one measurement rather than each asserting separately.",
+      "kills": {
+        "spec-vectors": {
+          "test": "spec-vectors reports the measured check against the RFC 7748 vectors",
+          "claim": {
+            "contains": "MATCHES THE PUBLISHED VECTORS",
+            "result": "pass"
+          }
+        },
+        "shared-secret-match": {
+          "test": "shared-secret-match renders the measured comparison of the two sides",
+          "claim": {
+            "absent": "NOT THE SAME BYTES",
+            "contains": "THE SAME 32 BYTES",
+            "result": "pass"
+          }
+        },
+        "identity-status": {
+          "test": "identity-status renders the substituted exchange as a match",
+          "claim": {
+            "contains": "THE SAME 32 BYTES — AND YOU DO NOT KNOW WHO WITH",
+            "result": "pass"
+          }
+        }
+      }
+    },
+    "eavesdropper-claims-recovery": {
+      "file": "src/eavesdrop/attempt.ts",
+      "find": "    recovered: sameAsReal,",
+      "replace": "    recovered: true,",
+      "why": "The eavesdropper panel claiming a recovery it did not perform. Narrower than the two above on purpose: it leaves the byte comparison alone and attacks only the attack-succeeded claim, which is what proves that claim is wired to a measurement rather than coinciding with one. src/eavesdrop/attempt.ts keeps `sameAsReal` and `recovered` as separate fields for exactly this reason.",
+      "kills": {
+        "recovery-status": {
+          "test": "recovery-status reports no recovery, and counts the attempt",
+          "claim": {
+            "contains": "SHARED SECRET NOT RECOVERED",
+            "result": "pass"
+          }
+        }
+      }
+    },
+    "zero-check-inverted": {
+      "file": "src/verify/zero-check.ts",
+      "find": "  return bytes.every((byte) => byte === 0)",
+      "replace": "  return !bytes.every((byte) => byte === 0)",
+      "why": "RFC 7748 §6.1's optional abort, inverted, so an honest exchange reports itself as the all-zero value. The ABORT branch is not reachable through any control -- @noble/curves refuses a low-order public value before an all-zero result could be returned, which src/x25519/agree.test.ts measures -- so this mutation is the only place that branch is exercised, which is the point of recording it. It also breaks one of the four checks inside the §4.1d fixture, which is how that fixture's second assertion is proved to bite.",
+      "kills": {
+        "zero-check": {
+          "test": "zero-check reports the RFC 7748 section 6.1 check on the live exchange",
+          "claim": {
+            "absent": "ABORT",
+            "contains": "NOT THE ALL-ZERO VALUE",
+            "result": "pass"
+          }
+        },
+        "identity-status": {
+          "test": "identity-status: every check passes in the substituted exchange and the limit is on screen",
+          "claim": {
+            "contains": "the shared value is not all-zero (RFC 7748 §6.1): PASS",
+            "label": "[data-test=\"identity-checks\"]",
+            "result": "pass"
+          }
+        }
+      }
+    },
+    "agreement-ignores-the-peer": {
+      "file": "src/exchange/exchange.ts",
+      "find": "  const aliceSide = agree(alice.privateValue, bob.publicValue)",
+      "replace": "  const aliceSide = agree(alice.privateValue, alice.publicValue)",
+      "why": "Alice combines her private value with her OWN published value instead of the one that arrived. The two sides stop agreeing, so the headline verdict goes red -- and so does e2e/claims.spec.ts's independent re-derivation, which is the stronger signal: a test that only checked the page agreed with itself would pass this, because the page would report its wrong answer consistently everywhere.",
+      "kills": {
+        "shared-secret-match": {
+          "test": "shared-secret-match renders the measured comparison of the two sides",
+          "claim": {
+            "absent": "NOT THE SAME BYTES",
+            "contains": "THE SAME 32 BYTES",
+            "result": "pass"
+          }
+        }
+      }
+    },
+    "impostor-substitutes-nothing": {
+      "file": "src/exchange/impostor.ts",
+      "find": "  const aliceSide = agree(alice.privateValue, impostor.publicValue)",
+      "replace": "  const aliceSide = agree(alice.privateValue, bob.publicValue)",
+      "why": "The §4.1d fixture failing to substitute anything -- Alice agrees with the real Bob while the page still calls it a stranger. The fixture is only evidence if the substitution happened, so this is the mutation that says so. The two sides stop matching and the verdict goes red; e2e/claims.spec.ts's 'really was run against a substituted value' test fails in the same run.",
+      "kills": {
+        "identity-status": {
+          "test": "identity-status renders the substituted exchange as a match",
+          "claim": {
+            "contains": "THE SAME 32 BYTES — AND YOU DO NOT KNOW WHO WITH",
+            "result": "pass"
+          }
+        }
+      }
+    },
+    "guess-counter-stops-counting": {
+      "file": "src/ui/eavesdrop-panel.ts",
+      "find": "    attempts += 1",
+      "replace": "    attempts += 0",
+      "why": "The attempt counter stops counting. A rendered number is a claim in exactly the way a rendered word is, and it is the easier one to leave unchecked because a number does not look like a claim -- so the count is held to its rendered text AND its machine value at once.",
+      "kills": {
+        "guess-count": {
+          "test": "recovery-status reports no recovery, and counts the attempt",
+          "claim": {
+            "contains": "1 guess",
+            "value": "1"
+          }
+        }
+      }
+    },
+    "negative-claim-softened": {
+      "file": "src/ui/identity-panel.ts",
+      "find": "          'Agreeing on a secret tells you nothing about who you agreed with. Alice’s secret matches the ',",
+      "replace": "          'Agreeing on a secret is a solid start. Alice’s secret matches the ',",
+      "why": "The negative claim itself, softened into a reassurance. §4.1d asks that deleting the negative-claim text fails the fixture's third assertion, and this is that check: the limitation is a rendered marker like any other outcome, so it is covered by a mutation like any other rather than being prose nothing tests.",
+      "kills": {
+        "negative-claim": {
+          "test": "identity-status: every check passes in the substituted exchange and the limit is on screen",
+          "claim": {
+            "contains": "tells you nothing about who you agreed with",
+            "result": "idle"
+          }
+        }
+      }
+    }
+  }
+}
