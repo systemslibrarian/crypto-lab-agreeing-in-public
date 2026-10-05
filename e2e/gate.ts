@@ -192,11 +192,14 @@ export async function driveAllStates(page: Page, prefix: string): Promise<void> 
   // The analogy: four stages on demand, then the wrap.
   for (let stage = 2; stage <= 4; stage += 1) {
     await page.locator('#analogy-step').click()
-    await expect(page.locator('#analogy-progress')).toHaveText(`Step ${stage} of 4`)
+    // data-stage, not the progress sentence: §4.1a wants structure here, so
+    // that rewording "Step 2 of 4" fails a claims test rather than every
+    // accessibility test at once, under a heading naming the wrong subject.
+    await expect(page.locator('.analogy-board')).toHaveAttribute('data-stage', String(stage - 1))
     await scanAt(`analogy stage ${stage}`)
   }
   await page.locator('#analogy-step').click()
-  await expect(page.locator('#analogy-progress')).toHaveText('Step 1 of 4')
+  await expect(page.locator('.analogy-board')).toHaveAttribute('data-stage', '0')
   await scanAt('analogy wrapped back to stage one')
 
   await page.locator('#exchange-button').click()

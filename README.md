@@ -145,7 +145,7 @@ npm run preview      # serves dist/ on port 4731
 
 ```bash
 npm test             # 60 unit tests, 8 files
-npm run test:a11y    # the WCAG 2.1 AA gate and the claims suite, 25 browser tests
+npm run test:a11y    # the WCAG 2.1 AA gate and the claims suite, 26 browser tests
 npm run test:verdicts # the verdict, claims and marker-coverage suites
 npm run test:mutation # applies every recorded mutation and judges each result
 ```

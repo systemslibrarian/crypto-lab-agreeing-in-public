@@ -180,6 +180,15 @@ test('the arrival state renders no outcome it has not computed', async ({ page }
   await expect(page.locator('[data-test="shared-secret"]')).toHaveCount(0)
 })
 
+test('the analogy numbers its steps for the reader', async ({ page }) => {
+  // The copy half of what e2e/gate.ts asserts structurally. A reworded
+  // progress line fails here, where the subject is named, rather than failing
+  // three accessibility tests under a heading about accessibility.
+  await expect(page.locator('#analogy-progress')).toHaveText('Step 1 of 4')
+  await page.locator('#analogy-step').click()
+  await expect(page.locator('#analogy-progress')).toHaveText('Step 2 of 4')
+})
+
 test('the page says it is an analogy before it shows the picture', async ({ page }) => {
   // A copy assertion, deliberately in the claims suite: the honesty of panel 1
   // rests on this word being there, and a reword should fail a test named
