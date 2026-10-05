@@ -1,10 +1,10 @@
 {
   "generatedBy": "scripts/mutate.mjs run",
   "note": "Machine-written from the run it reports. Do not hand-edit; re-run instead.",
-  "commit": "1b86e74c13fba24bac38e0d13b4b06e11df25b89",
-  "ranAt": "2026-10-05T04:18:13.235Z",
+  "commit": "19b9202b383d7dff17612f6204a787abc607329a",
+  "ranAt": "2026-10-05T11:43:35.403Z",
   "suite": "npx playwright test e2e/verdicts.spec.ts e2e/claims.spec.ts e2e/verdict-coverage.spec.ts --reporter=list --retries=0",
-  "baselineTestsPassed": "22",
+  "baselineTestsPassed": "29",
   "observed": [
     {
       "id": "comparison-always-identical",
@@ -14,12 +14,15 @@
         "guess-outcome",
         "recovery-status"
       ],
-      "baselineHash": "82ee31789aa4",
-      "mutatedHash": "a138978c6f34",
-      "restoredHash": "82ee31789aa4",
+      "baselineHash": "d451e0893996",
+      "mutatedHash": "bdf740f9c492",
+      "restoredHash": "d451e0893996",
       "failingTests": [
-        "e2e/claims.spec.ts:110:1 › the guessing space the prose names matches the length the input accepts",
+        "e2e/claims.spec.ts:142:1 › Bob's private value does not recover through this panel, which guesses Alice's",
+        "e2e/claims.spec.ts:188:1 › a fresh exchange restarts the per-exchange guess count",
+        "e2e/claims.spec.ts:220:1 › the guessing space the prose names matches the length the input accepts",
         "e2e/verdict-coverage.spec.ts:50:1 › check 1: every verdict and every measurement the page renders has a recorded mutation",
+        "e2e/verdict-coverage.spec.ts:73:1 › check 2: no verdict word, verdict styling or measurement renders outside a marker",
         "e2e/verdict-coverage.spec.ts:155:1 › every recorded mutation still applies to the source it names",
         "e2e/verdicts.spec.ts:76:1 › guess-outcome renders the byte comparison of a guess against the real secret",
         "e2e/verdicts.spec.ts:89:1 › recovery-status reports no recovery, and counts the attempt"
@@ -34,14 +37,16 @@
         "shared-secret-match",
         "identity-status"
       ],
-      "baselineHash": "82ee31789aa4",
-      "mutatedHash": "93a8b9436e3f",
-      "restoredHash": "82ee31789aa4",
+      "baselineHash": "d451e0893996",
+      "mutatedHash": "1d7d58d6e77b",
+      "restoredHash": "d451e0893996",
       "failingTests": [
         "e2e/claims.spec.ts:59:1 › the shared secret is what X25519 independently says it should be",
-        "e2e/claims.spec.ts:129:1 › a fresh exchange retires an attempt made against the previous secret",
-        "e2e/claims.spec.ts:201:1 › identity-status: every check passes in the substituted exchange and the limit is on screen",
-        "e2e/claims.spec.ts:243:1 › the substituted exchange really was run against a substituted value",
+        "e2e/claims.spec.ts:142:1 › Bob's private value does not recover through this panel, which guesses Alice's",
+        "e2e/claims.spec.ts:165:1 › a candidate X25519 treats as identical also recovers, and the page does not claim otherwise",
+        "e2e/claims.spec.ts:239:1 › a fresh exchange retires an attempt made against the previous secret",
+        "e2e/claims.spec.ts:320:1 › identity-status: every check passes in the substituted exchange and the limit is on screen",
+        "e2e/claims.spec.ts:362:1 › the substituted exchange really was run against a substituted value",
         "e2e/verdict-coverage.spec.ts:155:1 › every recorded mutation still applies to the source it names",
         "e2e/verdicts.spec.ts:48:1 › spec-vectors reports the measured check against the RFC 7748 vectors",
         "e2e/verdicts.spec.ts:57:1 › shared-secret-match renders the measured comparison of the two sides",
@@ -56,12 +61,15 @@
       "markers": [
         "recovery-status"
       ],
-      "baselineHash": "82ee31789aa4",
-      "mutatedHash": "13d87e464944",
-      "restoredHash": "82ee31789aa4",
+      "baselineHash": "d451e0893996",
+      "mutatedHash": "cb64025e31db",
+      "restoredHash": "d451e0893996",
       "failingTests": [
-        "e2e/claims.spec.ts:110:1 › the guessing space the prose names matches the length the input accepts",
+        "e2e/claims.spec.ts:142:1 › Bob's private value does not recover through this panel, which guesses Alice's",
+        "e2e/claims.spec.ts:188:1 › a fresh exchange restarts the per-exchange guess count",
+        "e2e/claims.spec.ts:220:1 › the guessing space the prose names matches the length the input accepts",
         "e2e/verdict-coverage.spec.ts:50:1 › check 1: every verdict and every measurement the page renders has a recorded mutation",
+        "e2e/verdict-coverage.spec.ts:73:1 › check 2: no verdict word, verdict styling or measurement renders outside a marker",
         "e2e/verdict-coverage.spec.ts:155:1 › every recorded mutation still applies to the source it names",
         "e2e/verdicts.spec.ts:89:1 › recovery-status reports no recovery, and counts the attempt"
       ]
@@ -74,11 +82,11 @@
         "zero-check",
         "identity-status"
       ],
-      "baselineHash": "82ee31789aa4",
-      "mutatedHash": "7e7411cec04a",
-      "restoredHash": "82ee31789aa4",
+      "baselineHash": "d451e0893996",
+      "mutatedHash": "4d5637b9708f",
+      "restoredHash": "d451e0893996",
       "failingTests": [
-        "e2e/claims.spec.ts:201:1 › identity-status: every check passes in the substituted exchange and the limit is on screen",
+        "e2e/claims.spec.ts:320:1 › identity-status: every check passes in the substituted exchange and the limit is on screen",
         "e2e/verdict-coverage.spec.ts:155:1 › every recorded mutation still applies to the source it names",
         "e2e/verdicts.spec.ts:66:1 › zero-check reports the RFC 7748 section 6.1 check on the live exchange"
       ]
@@ -90,13 +98,15 @@
       "markers": [
         "shared-secret-match"
       ],
-      "baselineHash": "82ee31789aa4",
-      "mutatedHash": "420fb4bdf506",
-      "restoredHash": "82ee31789aa4",
+      "baselineHash": "d451e0893996",
+      "mutatedHash": "b7c68eea6257",
+      "restoredHash": "d451e0893996",
       "failingTests": [
         "e2e/claims.spec.ts:59:1 › the shared secret is what X25519 independently says it should be",
         "e2e/claims.spec.ts:73:1 › the two sides are two computations, not one value printed twice",
-        "e2e/claims.spec.ts:129:1 › a fresh exchange retires an attempt made against the previous secret",
+        "e2e/claims.spec.ts:142:1 › Bob's private value does not recover through this panel, which guesses Alice's",
+        "e2e/claims.spec.ts:165:1 › a candidate X25519 treats as identical also recovers, and the page does not claim otherwise",
+        "e2e/claims.spec.ts:239:1 › a fresh exchange retires an attempt made against the previous secret",
         "e2e/verdict-coverage.spec.ts:155:1 › every recorded mutation still applies to the source it names",
         "e2e/verdicts.spec.ts:57:1 › shared-secret-match renders the measured comparison of the two sides",
         "e2e/verdicts.spec.ts:102:1 › guess-outcome and recovery-status both turn over for the one value that works"
@@ -109,12 +119,12 @@
       "markers": [
         "identity-status"
       ],
-      "baselineHash": "82ee31789aa4",
-      "mutatedHash": "fd305b375e99",
-      "restoredHash": "82ee31789aa4",
+      "baselineHash": "d451e0893996",
+      "mutatedHash": "c981f773aaaf",
+      "restoredHash": "d451e0893996",
       "failingTests": [
-        "e2e/claims.spec.ts:201:1 › identity-status: every check passes in the substituted exchange and the limit is on screen",
-        "e2e/claims.spec.ts:243:1 › the substituted exchange really was run against a substituted value",
+        "e2e/claims.spec.ts:320:1 › identity-status: every check passes in the substituted exchange and the limit is on screen",
+        "e2e/claims.spec.ts:362:1 › the substituted exchange really was run against a substituted value",
         "e2e/verdict-coverage.spec.ts:155:1 › every recorded mutation still applies to the source it names",
         "e2e/verdicts.spec.ts:118:1 › identity-status renders the substituted exchange as a match"
       ]
@@ -126,11 +136,12 @@
       "markers": [
         "guess-count"
       ],
-      "baselineHash": "82ee31789aa4",
-      "mutatedHash": "daeee3912940",
-      "restoredHash": "82ee31789aa4",
+      "baselineHash": "d451e0893996",
+      "mutatedHash": "af86a49c8979",
+      "restoredHash": "d451e0893996",
       "failingTests": [
-        "e2e/claims.spec.ts:129:1 › a fresh exchange retires an attempt made against the previous secret",
+        "e2e/claims.spec.ts:188:1 › a fresh exchange restarts the per-exchange guess count",
+        "e2e/claims.spec.ts:239:1 › a fresh exchange retires an attempt made against the previous secret",
         "e2e/verdict-coverage.spec.ts:50:1 › check 1: every verdict and every measurement the page renders has a recorded mutation",
         "e2e/verdict-coverage.spec.ts:73:1 › check 2: no verdict word, verdict styling or measurement renders outside a marker",
         "e2e/verdict-coverage.spec.ts:155:1 › every recorded mutation still applies to the source it names",
@@ -144,11 +155,28 @@
       "markers": [
         "negative-claim"
       ],
-      "baselineHash": "82ee31789aa4",
-      "mutatedHash": "98d81f165309",
-      "restoredHash": "82ee31789aa4",
+      "baselineHash": "d451e0893996",
+      "mutatedHash": "b07f270f5b94",
+      "restoredHash": "d451e0893996",
       "failingTests": [
-        "e2e/claims.spec.ts:201:1 › identity-status: every check passes in the substituted exchange and the limit is on screen",
+        "e2e/claims.spec.ts:320:1 › identity-status: every check passes in the substituted exchange and the limit is on screen",
+        "e2e/verdict-coverage.spec.ts:155:1 › every recorded mutation still applies to the source it names"
+      ]
+    },
+    {
+      "id": "fresh-exchange-keeps-counting",
+      "verdict": "KILLED",
+      "file": "src/ui/eavesdrop-panel.ts",
+      "markers": [
+        "guess-count"
+      ],
+      "baselineHash": "d451e0893996",
+      "mutatedHash": "c0f516d53560",
+      "restoredHash": "d451e0893996",
+      "failingTests": [
+        "e2e/claims.spec.ts:188:1 › a fresh exchange restarts the per-exchange guess count",
+        "e2e/verdict-coverage.spec.ts:50:1 › check 1: every verdict and every measurement the page renders has a recorded mutation",
+        "e2e/verdict-coverage.spec.ts:73:1 › check 2: no verdict word, verdict styling or measurement renders outside a marker",
         "e2e/verdict-coverage.spec.ts:155:1 › every recorded mutation still applies to the source it names"
       ]
     }
