@@ -17,11 +17,11 @@
  */
 
 :root {
-  /* --accent is awaiting the catalog's central assignment. #35d6bb is the
-     fleet top bar's own documented fallback, so until it is assigned this lab
-     agrees with the bar rather than disagreeing with an invented colour. The
-     token must exist: an undefined --accent paints the shared bar teal
-     whatever a card says, which is the defect the rule exists to prevent. */
+  /* Assigned centrally from the catalog on 2026-10-06. The measured choice is
+     the same value this file already carried as the documented fallback, so
+     nothing about the palette moves -- what changes is that it is now a
+     decision rather than a placeholder. Clean against its neighbours at 1440,
+     1280, 1024, 760 and 420. */
   --accent: #35d6bb;
   --accent-ink: #04231d;
   --bg: #0b0d12;
