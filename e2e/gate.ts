@@ -2,6 +2,7 @@ import AxeBuilder from '@axe-core/playwright'
 import { expect, type Page } from '@playwright/test'
 
 import { auditContrast, formatContrastFailures } from './contrast.js'
+import { auditControlNames, formatControlNameFailures } from './control-names.js'
 import { auditNonText } from './nontext.js'
 import { NONTEXT_BASELINE } from './nontext-baseline.js'
 
@@ -124,6 +125,11 @@ export async function scan(page: Page, label: string): Promise<void> {
 
   const contrast = [...new Set(formatContrastFailures(await auditContrast(page)))]
   expect(contrast, `measured text contrast in ${label}`).toEqual([])
+
+  // axe's `label` rule accepts a bare `placeholder` as an accessible name, so a
+  // deleted label can leave this gate green. See `control-names.ts`.
+  const unnamed = formatControlNameFailures(await auditControlNames(page))
+  expect(unnamed, `form controls named only by placeholder/title in state: ${label}`).toEqual([])
 
   // Text inside aria-hidden still has to pass: this lab's verdict icons live
   // there, and a glyph nobody can read is not an improvement on colour alone.
