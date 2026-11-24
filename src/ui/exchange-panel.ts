@@ -1,5 +1,5 @@
 import { toHex } from '../x25519/bytes.js'
-import { checkSection52Vectors } from '../x25519/agree.js'
+import { checkSection52Vectors, section52Status } from '../x25519/agree.js'
 import { byteStrip, bytePrefix } from './byte-strip.js'
 import { announce } from './announce.js'
 import { clear, el, verdict } from './dom.js'
@@ -126,8 +126,8 @@ export function exchangePanel(lab: Lab): HTMLElement {
     el('p', { class: 'eyebrow' }, ['Panel 2 — the real exchange']),
     el('h2', { id: 'exchange-heading' }, ['Now the real thing']),
     el('p', { class: 'band-lead' }, [
-      'No colours from here on. This runs real X25519 — the key agreement in RFC 7748, the same one your ',
-      'browser uses — in this page, on values generated in your browser a moment ago. Alice and Bob each ',
+      'This runs real X25519, a key agreement a browser and server can negotiate in TLS. ',
+      'The page uses fresh values generated in your browser. Alice and Bob each ',
       'hold a private value of 32 random bytes, which neither of them ever sends. What they send is one ',
       'value each, in the clear. What they end up with is 32 bytes they both have and nobody sent.',
     ]),
@@ -148,7 +148,15 @@ export function exchangePanel(lab: Lab): HTMLElement {
  */
 function vectorCheck(): HTMLElement {
   const results = checkSection52Vectors()
-  const allMatch = results.every((result) => result.matches)
+  const status = section52Status(results)
+  if (status === 'incomplete') {
+    return el('div', { class: 'vector-check', id: 'vector-check' }, [
+      verdict('spec-vectors', 'alarm', '!', 'PUBLISHED EXAMPLE CHECK INCOMPLETE', [
+        'The comparison requires both distinct X25519 examples from RFC 7748 §5.2. This run did not check the complete pair.',
+      ]),
+    ])
+  }
+  const allMatch = status === 'match'
   return el('div', { class: 'vector-check', id: 'vector-check' }, [
     verdict(
       'spec-vectors',

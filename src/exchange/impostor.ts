@@ -1,6 +1,6 @@
 import { agree, generateKeyPair, type Agreement, type KeyPair } from '../x25519/agree.js'
 import { firstDifference, sameBytes } from '../verify/compare.js'
-import { checkSection52Vectors } from '../x25519/agree.js'
+import { checkSection52Vectors, section52Status } from '../x25519/agree.js'
 
 /**
  * The negative claim, built rather than disclaimed (§4.1d).
@@ -66,7 +66,7 @@ export function runSubstitutedExchange(
     },
     {
       label: 'the RFC 7748 §5.2 vectors still match',
-      passed: checkSection52Vectors().every((result) => result.matches),
+      passed: section52Status(checkSection52Vectors()) === 'match',
     },
   ]
   return {

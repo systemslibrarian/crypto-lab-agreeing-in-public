@@ -72,6 +72,14 @@ export interface VectorResult {
   readonly matches: boolean
 }
 
+export function section52Status(results: readonly VectorResult[]): 'match' | 'mismatch' | 'incomplete' {
+  // RFC 7748 §5.2 publishes two X25519 scalar/u-coordinate examples.
+  if (results.length !== 2 || new Set(results.map(result => result.label)).size !== 2) {
+    return 'incomplete'
+  }
+  return results.every(result => result.matches) ? 'match' : 'mismatch'
+}
+
 /**
  * Run the RFC's own published vectors through the real function, in the
  * reader's browser, at page load.

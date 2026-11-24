@@ -10,8 +10,8 @@
 ## What It Is
 
 A browser-only teaching lab for **X25519 key agreement** as specified in
-[RFC 7748](https://www.rfc-editor.org/rfc/rfc7748) — one of the key agreements your browser runs
-before the first byte of a web page arrives. One real exchange is performed in the page,
+[RFC 7748](https://www.rfc-editor.org/rfc/rfc7748) — one of the key agreements a browser and server can negotiate
+when establishing an HTTPS connection. One real exchange is performed in the page,
 with `@noble/curves` doing the curve arithmetic, and the two independently computed shared
 secrets are compared byte for byte on screen.
 
@@ -126,10 +126,10 @@ is stored.
 
 ## Real-World Usage
 
-X25519 is the key agreement in TLS 1.3, in SSH, in WireGuard, in Signal's X3DH and PQXDH, and in
-the `age` file encryption format. The exchange in panel 2 is the same operation, with the same
-base point, that your browser performs on essentially every HTTPS connection it makes. RFC 7748
-§6.1's worked example is reproduced exactly by `src/exchange/exchange.test.ts`.
+TLS 1.3 can negotiate X25519. It also supports other groups, and its preshared-key mode can
+omit a fresh key exchange. See [RFC 8446 §§2.2 and 4.2.7](https://www.rfc-editor.org/rfc/rfc8446.html).
+X25519 is also used in SSH, WireGuard, Signal's X3DH and PQXDH, and the `age` file encryption
+format. Panel 2 performs the X25519 operation. The tests reproduce RFC 7748 §6.1's worked example.
 
 ## How to Run Locally
 

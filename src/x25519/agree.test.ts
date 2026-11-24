@@ -2,7 +2,7 @@ import { x25519 } from '@noble/curves/ed25519.js'
 import { describe, expect, it } from 'vitest'
 
 import { sameBytes } from '../verify/compare.js'
-import { agree, BASEPOINT, checkSection52Vectors, generateKeyPair, keyPairFrom } from './agree.js'
+import { agree, BASEPOINT, checkSection52Vectors, section52Status, generateKeyPair, keyPairFrom } from './agree.js'
 import { fromHex, toHex } from './bytes.js'
 import { SECTION_5_2_ITERATED, SECTION_5_2_VECTORS, SECTION_6_1_EXCHANGE } from './vectors.js'
 
@@ -32,7 +32,12 @@ describe('RFC 7748 §5.2 known-answer tests', () => {
 
   it('reports every vector as matching through the page\'s own checker', () => {
     const results = checkSection52Vectors()
-    expect(results).toHaveLength(SECTION_5_2_VECTORS.length)
+    expect(results).toHaveLength(2)
+    expect(section52Status(results)).toBe('match')
+    expect(section52Status([])).toBe('incomplete')
+    expect(section52Status(results.slice(0, 1))).toBe('incomplete')
+    expect(section52Status([results[0]!, results[0]!])).toBe('incomplete')
+    expect(section52Status([results[0]!, { ...results[1]!, matches: false }])).toBe('mismatch')
     expect(results.every((result) => result.matches)).toBe(true)
     expect(results.map((result) => result.computed)).toEqual(
       SECTION_5_2_VECTORS.map((vector) => vector.output),

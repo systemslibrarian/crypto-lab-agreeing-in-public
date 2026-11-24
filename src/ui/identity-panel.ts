@@ -84,9 +84,10 @@ export function identityPanel(): HTMLElement {
                 ),
               ),
               el('p', {}, [
-                'Nothing failed, and nothing was going to. There is no failure code for this: X25519 has ',
-                'none to raise, because agreement was never a claim about identity. Bob was not involved ',
-                'at any point and does not find out.',
+                run.checks.every(check => check.passed)
+                  ? 'Every listed check passed. None of them authenticates Bob.'
+                  : 'At least one listed check failed or was incomplete. Read its result above.',
+                ' Bob did not participate in this exchange.',
               ]),
             ]
           : [
