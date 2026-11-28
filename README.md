@@ -72,8 +72,8 @@ in panel 1, which carries no numbers and is labelled an analogy in the panel its
    disclosure explains why some *different* candidates recover too: RFC 7748 §5 fixes five bits
    before use, so candidates differing only in those are the same private value.
 
-4. **What the secret is for, and the one thing it is not.** The shared secret becomes the key that
-   encrypts the rest of the conversation. Then the negative claim, built rather than asserted:
+4. **What the secret is for, and the one thing it is not.** Alice and Bob compute the same 32-byte shared secret.
+   The protocol feeds that secret into a key-derivation function to derive symmetric keys. Then the negative claim, built rather than asserted:
    Alice sets out to agree with Bob, somebody else's public value arrives instead, and Alice and
    that somebody land on the same 32 bytes. **Every check the page performs passes, and they are
    all listed so that can be read rather than taken on trust.** There is no failure code, and the
