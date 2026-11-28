@@ -77,7 +77,10 @@ in panel 1, which carries no numbers and is labelled an analogy in the panel its
    Alice sets out to agree with Bob, somebody else's public value arrives instead, and Alice and
    that somebody land on the same 32 bytes. **Every check the page performs passes, and they are
    all listed so that can be read rather than taken on trust.** There is no failure code, and the
-   absence of one is the exhibit. The attack itself is handed on to DH MITM.
+   absence of one is the exhibit. The attack itself is handed on to DH MITM. A real authenticated key exchange must bind both
+   parties' identities and this fresh exchange or transcript into what is authenticated. A
+   certificate or signature is an ingredient, not a complete fix when it is not bound to this
+   exchange.
 
 ## When to Use It
 
